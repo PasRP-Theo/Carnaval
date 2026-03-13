@@ -3,7 +3,7 @@ import PublicPage from "./components/PublicPage";
 import AdminPage from "./components/AdminPage";
 import SecuPage from "./components/SecuPage";
 
-type View = "public" | "admin" | "secu";
+type View = "public" | "admin" | "secu" | "chariots";
 
 const VIEWS: { key: View; label: string }[] = [
   { key: "public", label: "PUBLIC" },
@@ -37,13 +37,13 @@ export default function App() {
     return (
       <div className="consent-overlay">
         <div className="consent-modal">
-          <h2>Information RGPD / Vidéo</h2>
+          <h2>Attention - Vidéo</h2>
           <p>
-            Ce service est diffusé en direct et des images/vidéos peuvent être captées lors de l'événement.
-            En continuant, vous acceptez que ces images puissent être utilisées à des fins de supervision et de communication.
+            Salut ! En participant à cet événement, tu peux être <strong>potentiellement filmé</strong> par les caméras embarquées sur les chars.
+            En cliquant ci-dessous, tu acceptes cette captation et cet usage limité à la supervision et à la communication de l'événement.
           </p>
           <p style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "var(--text-muted)" }}>
-            Vous pouvez quitter à tout moment si vous ne souhaitez pas participer.
+            Si tu ne veux pas être filmé, tu peux fermer cette page.
           </p>
           <button className="btn btn-primary" onClick={acceptConsent} style={{ marginTop: "1.2rem" }}>
             J'ai compris, afficher le site
