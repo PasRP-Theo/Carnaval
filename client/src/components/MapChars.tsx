@@ -22,7 +22,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-const COLORS = ["#60a5fa", "#ef4444", "#22c55e", "#f59e0b", "#a78bfa", "#34d399"];
+const COLORS = ["#4f8df7", "#e56f63", "#2fba8c", "#e0a43f", "#9f72df", "#3bc4cf"];
 
 const createCharIcon = (color: string, label: number) =>
   L.divIcon({
@@ -34,7 +34,7 @@ const createCharIcon = (color: string, label: number) =>
 const createSecuIcon = () =>
   L.divIcon({
     className: "",
-    html: `<div style="background:#ef4444;color:#fff;border-radius:3px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:15px;border:1px solid rgba(255,255,255,0.2);box-shadow:0 2px 8px rgba(0,0,0,0.5);">🚑</div>`,
+    html: `<div style="background:#d96d62;color:#fff8ef;border-radius:10px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:15px;border:1px solid rgba(255,255,255,0.28);box-shadow:0 6px 16px rgba(0,0,0,0.25);">🚑</div>`,
     iconSize: [32, 32], iconAnchor: [16, 16],
   });
 
@@ -81,12 +81,12 @@ export default function MapChars({ centreVille = [50.4669, 4.8674], showSecu = f
                 <Popup>
                   <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", minWidth: "160px" }}>
                     <div style={{ fontWeight: 700, marginBottom: "6px" }}>🎠 {char.nom}</div>
-                    <div style={{ color: "#666" }}>📍 {char.latitude.toFixed(5)}, {char.longitude.toFixed(5)}</div>
-                    {char.vitesse !== undefined && <div style={{ color: "#666" }}>🚗 {char.vitesse} km/h</div>}
+                    <div style={{ color: "var(--text-muted)" }}>📍 {char.latitude.toFixed(5)}, {char.longitude.toFixed(5)}</div>
+                    {char.vitesse !== undefined && <div style={{ color: "var(--text-muted)" }}>🚗 {char.vitesse} km/h</div>}
                     <div style={{ marginTop: "4px" }}>
-                      <span style={{ background: char.statut === "actif" ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)", color: char.statut === "actif" ? "#16a34a" : "#dc2626", padding: "1px 6px", borderRadius: "2px", fontSize: "10px", fontWeight: 700 }}>{char.statut}</span>
+                      <span style={{ background: char.statut === "actif" ? "rgba(79,209,181,0.14)" : "rgba(240,125,114,0.14)", color: char.statut === "actif" ? "var(--accent-success)" : "var(--accent-error)", padding: "3px 8px", borderRadius: "999px", fontSize: "10px", fontWeight: 700, border: "1px solid var(--border)" }}>{char.statut}</span>
                     </div>
-                    {char.updated_at && <div style={{ color: "#999", fontSize: "10px", marginTop: "4px" }}>Màj : {new Date(char.updated_at).toLocaleTimeString()}</div>}
+                    {char.updated_at && <div style={{ color: "var(--text-faint)", fontSize: "10px", marginTop: "4px" }}>Màj : {new Date(char.updated_at).toLocaleTimeString()}</div>}
                   </div>
                 </Popup>
               </Marker>
@@ -98,7 +98,7 @@ export default function MapChars({ centreVille = [50.4669, 4.8674], showSecu = f
             <Popup>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px" }}>
                 <div style={{ fontWeight: 700 }}>🚑 {s.nom}</div>
-                <div style={{ color: "#666" }}>{s.role}</div>
+                <div style={{ color: "var(--text-muted)" }}>{s.role}</div>
               </div>
             </Popup>
           </Marker>

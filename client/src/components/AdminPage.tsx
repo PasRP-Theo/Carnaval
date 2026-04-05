@@ -225,7 +225,7 @@ export default function AdminPage() {
               { label: "CHARS ACTIFS",  value: `${stats.chars_actifs}/${stats.chars_total}`, color: "var(--accent-success)"   },
               { label: "BÉNÉVOLES",     value: stats.benevoles,    color: "var(--accent-primary)"  },
               { label: "FORAINS",       value: stats.forains,      color: "var(--accent-secondary)" },
-              { label: "INSCRIPTIONS",  value: stats.inscriptions, color: "#a78bfa"                },
+              { label: "INSCRIPTIONS",  value: stats.inscriptions, color: "#9f72df"                },
               { label: "VOTES",         value: stats.votes_total,  color: "var(--accent-warning)"  },
               { label: "ALERTES",       value: stats.alertes,      color: "var(--accent-error)"    },
             ].map((s, i) => (

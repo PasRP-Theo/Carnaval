@@ -16,9 +16,17 @@ export default function App() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [consent, setConsent] = useState(false);
 
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("carnaval_theme");
+    const nextTheme = storedTheme === "light" ? "light" : "dark";
+    setTheme(nextTheme);
+    document.documentElement.setAttribute("data-theme", nextTheme === "light" ? "light" : "");
+  }, []);
+
   const toggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
+    localStorage.setItem("carnaval_theme", next);
     document.documentElement.setAttribute("data-theme", next === "light" ? "light" : "");
   };
 
@@ -37,7 +45,8 @@ export default function App() {
     return (
       <div className="consent-overlay">
         <div className="consent-modal">
-          <h2>Attention - Vidéo</h2>
+          <div className="consent-kicker">Information visiteur</div>
+          <h2>Captation vidéo pendant l'événement</h2>
           <p>
             Salut ! En participant à cet événement, tu peux être <strong>potentiellement filmé</strong> par les caméras embarquées sur les chars.
             En cliquant ci-dessous, tu acceptes cette captation et cet usage limité à la supervision et à la communication de l'événement.
@@ -54,43 +63,76 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <div className="app-header-inner">
-          <div className="app-logo">
-            <span className="app-logo-icon">◈</span>
-            <div>
-              <div className="app-logo-text">CARNAVAL</div>
-              <div className="app-logo-version">v1.0.0 // 2026</div>
+    <div className="app-shell">
+      <div className="app-backdrop" aria-hidden="true">
+        <div className="app-orb app-orb--one" />
+        <div className="app-orb app-orb--two" />
+        <div className="app-orb app-orb--three" />
+        <div className="app-grid" />
+      </div>
+
+      <div className="app">
+        <header className="app-header">
+          <div className="app-header-inner">
+            <div className="app-brand-block">
+              <div className="app-logo">
+                <span className="app-logo-icon">C</span>
+                <div>
+                  <div className="app-logo-text">Carnaval Operations</div>
+                  <div className="app-logo-version">Plateforme temps réel · édition 2026</div>
+                </div>
+              </div>
+
+              <div className="app-strapline">
+                Pilotage public, sécurité et coordination dans une seule interface.
+            </div>
+            </div>
+
+            <nav className="app-nav" aria-label="Navigation principale">
+              {VIEWS.map(v => (
+                <button
+                  key={v.key}
+                  onClick={() => setView(v.key)}
+                  className={`app-nav-link${view === v.key ? " active" : ""}`}
+                  style={{ background: "none", fontFamily: "var(--font-mono)", cursor: "pointer" }}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="app-tools">
+              <div className="app-status">
+                <div className="app-status-dot" />
+                <div>
+                  <div className="app-status-label">Système en ligne</div>
+                  <div className="app-status-meta">Flux et données synchronisés</div>
+                </div>
+              </div>
+
+              <button className="app-theme-btn" onClick={toggleTheme} title="Changer le thème">
+                <span>{theme === "dark" ? "Clair" : "Sombre"}</span>
+              </button>
             </div>
           </div>
+        </header>
 
-          <nav className="app-nav">
-            {VIEWS.map(v => (
-              <button key={v.key} onClick={() => setView(v.key)}
-                className={`app-nav-link${view === v.key ? " active" : ""}`}
-                style={{ background: "none", fontFamily: "var(--font-mono)", cursor: "pointer" }}>
-                {v.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="app-status">
-            <div className="app-status-dot" />
-            ONLINE
+        <section className="app-banner">
+          <div>
+            <div className="app-banner-kicker">Centre de supervision</div>
+            <h1 className="app-banner-title">Une interface plus claire, plus structurée, plus crédible.</h1>
           </div>
+          <p className="app-banner-copy">
+            Suivi du cortège, caméras embarquées, gestion terrain et pilotage comité avec une présentation orientée exploitation.
+          </p>
+        </section>
 
-          <button className="app-theme-btn" onClick={toggleTheme} title="Changer le thème">
-            {theme === "dark" ? "☀" : "◑"}
-          </button>
-        </div>
-      </header>
-
-      <main className="app-main">
-        {view === "public" && <PublicPage />}
-        {view === "admin" && <AdminPage />}
-        {view === "secu" && <SecuPage />}
-      </main>
+        <main className="app-main">
+          {view === "public" && <PublicPage />}
+          {view === "admin" && <AdminPage />}
+          {view === "secu" && <SecuPage />}
+        </main>
+      </div>
     </div>
   );
 }
