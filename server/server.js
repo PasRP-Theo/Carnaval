@@ -3,7 +3,7 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { testConnection, seedUsers, createTables, seedChariots } from "./db.js";
+import { testConnection, seedUsers, createTables, seedChariots, seedSupportData } from "./db.js";
 import apiRoutes from "./routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +27,7 @@ await testConnection();
 await createTables();
 await seedUsers();
 await seedChariots();
+await seedSupportData();
 
 app.listen(PORT, () => {
   console.log(`\n🎠  Carnaval API  →  http://localhost:${PORT}`);

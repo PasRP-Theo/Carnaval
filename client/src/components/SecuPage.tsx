@@ -196,7 +196,12 @@ export default function SecuPage() {
               <div style={{ fontSize: "9px", color: "var(--text-muted)", letterSpacing: "0.06em" }}>DE: {al.expediteur}{al.latitude ? ` // GPS: ${al.latitude.toFixed(4)}, ${al.longitude?.toFixed(4)}` : ""}</div>
             </div>
             {!al.lu && (
-              <button onClick={() => setAlertes(a => a.map(x => x.id === al.id ? { ...x, lu: true } : x))}
+              <button onClick={async () => {
+                try {
+                  await fetch(`/api/secu/alertes/${al.id}/lu`, { method: "PATCH", headers: { "x-secu-token": token } });
+                } catch {}
+                setAlertes(a => a.map(x => x.id === al.id ? { ...x, lu: true } : x));
+              }}
                 style={{ background: "rgba(0,255,136,0.08)", border: "1px solid rgba(0,255,136,0.3)", borderRadius: "3px", padding: "3px 10px", color: "var(--accent-success)", fontFamily: "var(--font-mono)", fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", cursor: "pointer", whiteSpace: "nowrap" }}>
                 ACK
               </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import MapChars from "./MapChars";
 
 interface Char {
@@ -7,7 +7,7 @@ interface Char {
   latitude: number; longitude: number;
 }
 
-const COLORS = ["#60a5fa", "#ef4444", "#22c55e", "#f59e0b", "#a78bfa", "#34d399"];
+const ACCENT_CLASSES = ["accent-0", "accent-1", "accent-2", "accent-3", "accent-4", "accent-5"];
 
 const DEMO_CHARS: Char[] = [
   { id: 1, nom: "Char des Lions", description: "Le char officiel de l'association Les Lions", statut: "actif", vitesse: 4, participants: 12, latitude: 50.4672, longitude: 4.8678 },
@@ -16,6 +16,7 @@ const DEMO_CHARS: Char[] = [
 ];
 
 export default function PublicPage() {
+  const fileInputId = useId();
   const [chars, setChars] = useState<Char[]>(DEMO_CHARS);
   const [votes, setVotes] = useState<Record<number, number>>({});
   const [voted, setVoted] = useState(false);
@@ -28,13 +29,26 @@ export default function PublicPage() {
 
   useEffect(() => {
     fetch("/api/chars").then(r => r.ok ? r.json() : null).then(d => d && setChars(d)).catch(() => {});
+    fetch("/api/votes").then(r => r.ok ? r.json() : {}).then(setVotes).catch(() => {});
     fetch("/api/photos").then(r => r.ok ? r.json() : []).then(setPhotos).catch(() => {});
   }, []);
 
   const handleVote = async (charId: number) => {
     if (voted) return;
-    try { await fetch("/api/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ char_id: charId }) }); } catch {}
-    setVotes(v => ({ ...v, [charId]: (v[charId] || 0) + 1 }));
+    try {
+      const res = await fetch("/api/vote", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ char_id: charId }) });
+      const data = await res.json().catch(() => null);
+      if (res.ok && data?.votes !== undefined) {
+        setVotes(v => ({ ...v, [charId]: data.votes }));
+      } else if (res.status === 409) {
+        setVoted(true);
+        return;
+      } else {
+        setVotes(v => ({ ...v, [charId]: (v[charId] || 0) + 1 }));
+      }
+    } catch {
+      setVotes(v => ({ ...v, [charId]: (v[charId] || 0) + 1 }));
+    }
     setVoted(true);
   };
 
@@ -42,13 +56,22 @@ export default function PublicPage() {
     if (!photoFile) return;
     const form = new FormData();
     form.append("photo", photoFile);
-    try { await fetch("/api/photos", { method: "POST", body: form }); setUploadMsg("✓ Photo envoyée"); setPhotoFile(null); }
+    try {
+      const res = await fetch("/api/photos", { method: "POST", body: form });
+      const photo = await res.json();
+      if (!res.ok) throw new Error();
+      setPhotos(current => [photo, ...current]);
+      setUploadMsg("✓ Photo envoyée");
+      setPhotoFile(null);
+    }
     catch { setUploadMsg("✗ Erreur envoi"); }
   };
 
   const tag = (label: string) => (
     <span className="camera-tag">{label}</span>
   );
+
+  const accentClass = (index: number) => `public-${ACCENT_CLASSES[index % ACCENT_CLASSES.length]}`;
 
   return (
     <div className="page-container">
@@ -60,17 +83,16 @@ export default function PublicPage() {
           <div className="page-subtitle">Suivi public du cortège en temps réel</div>
         </div>
         <div className="page-actions">
-          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--accent-success)", boxShadow: "0 0 6px var(--accent-success)", animation: "pulse 2s ease-in-out infinite" }} />
-          <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", color: "var(--accent-success)" }}>EN DIRECT</span>
+          <div className="public-live-dot" />
+          <span className="public-live-label">EN DIRECT</span>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <nav className="app-nav" style={{ borderBottom: "1px solid var(--border)", paddingBottom: "8px" }}>
+      <nav className="app-nav section-nav">
         {TABS.map((tab, i) => (
           <button key={i} onClick={() => setCurrentTab(i)}
-            className={`app-nav-link${currentTab === i ? " active" : ""}`}
-            style={{ background: "none", fontFamily: "var(--font-mono)", cursor: "pointer" }}>
+            className={`app-nav-link section-nav-link${currentTab === i ? " active" : ""}`}>
             {tab}
           </button>
         ))}
@@ -95,7 +117,7 @@ export default function PublicPage() {
               {tag(`${chars.length} CHARS`)}
             </div>
             {chars.length === 0 ? (
-              <div style={{ padding: "16px", fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.08em" }}>— AUCUN CHAR —</div>
+              <div className="admin-empty-state">— AUCUN CHAR —</div>
             ) : (
               <table className="sensor-table">
                 <thead>
@@ -109,10 +131,10 @@ export default function PublicPage() {
                   {chars.map((char, i) => (
                     <tr key={char.id} className={i % 2 === 0 ? "sensor-tr--odd" : "sensor-tr--even"}>
                       <td className="sensor-td">
-                        <div className="sensor-name" style={{ fontWeight: 600 }}>{char.nom}</div>
+                        <div className="sensor-name admin-name-strong">{char.nom}</div>
                       </td>
                       <td className="sensor-td">
-                        <div style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.04em" }}>{char.description || "—"}</div>
+                        <div className="public-char-description">{char.description || "—"}</div>
                       </td>
                       <td className="sensor-td">
                         <span className="sensor-value">{char.participants ?? "—"}</span>
@@ -139,14 +161,21 @@ export default function PublicPage() {
           <div className="sensor-wrapper">
             <div className="sensor-header">
               <span className="sensor-title">CAMERA // CHAR_01</span>
-              <div style={{ display: "flex", gap: "6px" }}>{tag("HLS")}{tag("720P")}</div>
+              <div className="public-camera-tags">{tag("SIMULATION")}{tag("UI")}</div>
             </div>
-            <div className="camera-card-screen" style={{ height: "360px" }}>
+            <div className="camera-card-screen public-camera-screen">
               <div className="camera-corner camera-corner--tl" />
               <div className="camera-corner camera-corner--tr" />
               <div className="camera-corner camera-corner--bl" />
               <div className="camera-corner camera-corner--br" />
-              <video src="/api/stream/char1" autoPlay muted controls style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <div className="public-camera-placeholder">
+                <div>
+                  <div className="public-camera-placeholder-title">FLUX VIDÉO NON CONNECTÉ</div>
+                  <div className="public-camera-placeholder-copy">
+                    L'interface caméra est prête, mais aucun backend de streaming n'est branché dans ce projet pour le moment.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -168,11 +197,11 @@ export default function PublicPage() {
                 {chars.map((char, i) => (
                   <tr key={char.id} className={i % 2 === 0 ? "sensor-tr--odd" : "sensor-tr--even"}>
                     <td className="sensor-td">
-                      <span style={{ color: COLORS[i % COLORS.length], fontWeight: 700, fontSize: "12px" }}>{String(i + 1).padStart(2, "0")}</span>
+                      <span className={`public-char-index ${accentClass(i)}`}>{String(i + 1).padStart(2, "0")}</span>
                     </td>
                     <td className="sensor-td">
-                      <div className="sensor-name" style={{ fontWeight: 600 }}>{char.nom}</div>
-                      <div style={{ fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.04em" }}>{char.description}</div>
+                      <div className="sensor-name admin-name-strong">{char.nom}</div>
+                      <div className="public-char-description">{char.description}</div>
                     </td>
                     <td className="sensor-td">
                       <span className="sensor-value">{char.participants}</span>
@@ -200,17 +229,16 @@ export default function PublicPage() {
               <span className="sensor-title">VOTE // POPULAIRE</span>
               {tag("CHAR FAVORI")}
             </div>
-            <div style={{ padding: "16px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px" }}>
+            <div className="public-vote-section">
+              <div className="public-vote-grid">
                 {chars.map((char, i) => (
-                  <div key={char.id} style={{ background: "var(--bg-surface)", border: "1px solid var(--border)", borderRadius: "4px", padding: "12px" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 600, marginBottom: "8px", color: COLORS[i % COLORS.length] }}>{char.nom}</div>
-                    <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "12px" }}>{char.description}</div>
+                  <div key={char.id} className="public-vote-card">
+                    <div className={`public-vote-card-title ${accentClass(i)}`}>{char.nom}</div>
+                    <div className="public-vote-card-copy">{char.description}</div>
                     <button
                       onClick={() => handleVote(char.id)}
                       disabled={voted}
-                      className="btn btn-primary"
-                      style={{ width: "100%" }}
+                      className="btn btn-primary public-full-width-btn"
                     >
                       {voted ? `✓ VOTÉ (${votes[char.id] || 0})` : `VOTER (${votes[char.id] || 0})`}
                     </button>
@@ -227,18 +255,28 @@ export default function PublicPage() {
               {tag(`${photos.length} PHOTOS`)}
             </div>
             <div className="gallery-section">
-              <div className="gallery-upload">
-                <input type="file" accept="image/*" onChange={e => setPhotoFile(e.target.files?.[0] ?? null)}
-                  className="vote-input" />
+              <div className="gallery-upload public-gallery-upload">
+                <input id={fileInputId} type="file" accept="image/*" title="Ajouter une photo" aria-label="Ajouter une photo"
+                  onChange={e => setPhotoFile(e.target.files?.[0] ?? null)}
+                  className="public-file-input" />
+                <label htmlFor={fileInputId} className="public-file-picker">
+                  <span className="public-file-picker-kicker">GALERIE</span>
+                  <span className="public-file-picker-title">Choisir une photo</span>
+                  <span className="public-file-picker-meta">JPG, PNG, WEBP</span>
+                </label>
+                <div className="public-file-selected">
+                  <span className="public-file-selected-label">Fichier</span>
+                  <span className="public-file-selected-name">{photoFile?.name || "Aucun fichier sélectionné"}</span>
+                </div>
                 <button onClick={handlePhotoUpload}
                   className="btn btn-primary">
                   ENVOYER →
                 </button>
-                {uploadMsg && <span className="vote-message" style={{ color: uploadMsg.startsWith("✓") ? "var(--accent-success)" : "var(--accent-error)" }}>{uploadMsg}</span>}
+                {uploadMsg && <span className={`vote-message ${uploadMsg.startsWith("✓") ? "public-upload-message--success" : "public-upload-message--error"}`}>{uploadMsg}</span>}
               </div>
               {photos.length > 0 && (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(120px,1fr))", gap: "8px" }}>
-                  {photos.map((p, i) => <img key={i} src={p.url} alt="" style={{ width: "100%", borderRadius: "3px", aspectRatio: "1", objectFit: "cover", border: "1px solid var(--border)" }} />)}
+                <div className="public-photo-grid">
+                  {photos.map((p, i) => <img key={i} src={p.url} alt="" className="public-photo-thumb" />)}
                 </div>
               )}
             </div>
